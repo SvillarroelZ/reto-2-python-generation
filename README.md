@@ -1,419 +1,351 @@
-# 🚀 Proyecto 2 — Cloud Instance Manager (CLI)
+# AWS EC2 Instance Manager CLI
 
-Variables • Estructuras de datos • Condicionales • Funciones • Validaciones • Excepciones • AWS • JMESPath
+## Overview
 
----
+This project is a command-line interface (CLI) application for managing AWS EC2 instances. It demonstrates proficiency in Python development, AWS SDK integration, testing methodologies, and secure credential management.
 
-## 🎯 Objetivo del proyecto
+The application enables users to:
 
-En este proyecto vas a construir **una aplicación de línea de comandos (CLI)** en Python que permita **administrar instancias en la nube** (por ejemplo, EC2 en AWS), con operaciones como:
+- List EC2 instances with filtering capabilities by state
+- Create new EC2 instances with custom configurations
+- Perform instance lifecycle operations (stop, start, reboot, terminate)
+- Handle AWS credentials securely using environment variables
+- Manage errors gracefully with comprehensive exception handling
 
-- Crear instancias  
-- Detener instancias  
-- Iniciar / reiniciar instancias  
-- Terminar instancias  
-- Listar las instancias actuales  
-- Filtrar instancias por estado u otros criterios  
+This project validates skills in cloud automation, software engineering best practices, and the ability to build production-ready tools with full test coverage.
 
-Todo esto usando:
+## Architecture Diagram
 
-- **Estructuras de datos** (listas, diccionarios, tuplas)  
-- **Condicionales (`if / elif / else`)**  
-- **Funciones**  
-- **Validaciones de entrada**  
-- **Manejo de excepciones (`try / except`)**  
-- Un cliente de AWS con **boto3** y filtros con **JMESPath**
+For a detailed architecture diagram with data flow, security, and testing layers, see [Architecture Documentation](docs/architecture.md).
 
-> ⚠️ IMPORTANTE: Este proyecto es didáctico. Usa SIEMPRE una cuenta de práctica / sandbox.  
-> Nunca ejecutes código que no entiendas en una cuenta de producción.
+![Architecture Overview](docs/architecture.md)
 
----
+## Project Structure
 
-## ✅ Requisitos previos
-
-Antes de empezar, necesitas:
-
-- Python 3.10+ instalado  
-- Git instalado  
-- VS Code o tu editor favorito  
-- Una cuenta de AWS de práctica  
-- Access Key y Secret Access Key personales (NO las compartas con nadie)  
-- Haber visto:
-  - Variables
-  - Listas, tuplas y diccionarios
-  - Condicionales
-  - Funciones
-  - Conceptos básicos de excepciones
-
----
-
-## 🧰 Paso 1 — Hacer Fork y clonar el repositorio
-
-El profesor Isen tendrá un repositorio base con el código inicial y los TODOs.
-
-1. Ve al repositorio original del profesor en GitHub.
-2. Haz clic en el botón Fork.
-3. En tu cuenta aparecerá una copia del repo.
-4. Clona tu fork a tu computadora:
-
-```bash
-git clone https://github.com/TU_USUARIO/NOMBRE_DEL_REPO.git
-cd NOMBRE_DEL_REPO
+```
+reto-2-python-generation/
+├── src/
+│   ├── __init__.py
+│   ├── config.py              # AWS credentials and region management
+│   ├── aws_client.py          # EC2 client creation with error handling
+│   ├── instances_cli.py       # All EC2 instance operations
+│   └── main.py                # Application entry point with interactive menu
+├── tests/
+│   ├── __init__.py
+│   ├── test_config.py         # 8 tests for credential management
+│   ├── test_aws_client.py     # 5 tests for client creation
+│   ├── test_instances_cli.py  # 24 tests for CLI operations
+│   └── README.md              # Test documentation and guidelines
+├── docs/
+│   └── architecture.md        # Architecture diagram and technical documentation
+├── .env                       # AWS credentials (not tracked in git)
+├── .env.example               # Template for .env file configuration
+├── .gitignore                 # Git ignore rules for sensitive and generated files
+├── requirements.txt           # Python dependencies (boto3, pytest, etc.)
+├── setup.cfg                  # pytest and coverage configuration
+└── README.md                  # This file
 ```
 
----
+## Core Components
 
-## 🛠️ Paso 2 — Configurar el entorno de trabajo
+### Configuration Module (src/config.py)
 
-Dentro de la carpeta del proyecto:
+Manages AWS credentials from environment variables with support for temporary session tokens:
 
-1. (Opcional pero recomendado) Crear entorno virtual:
+- `get_aws_credentials()`: Retrieves AWS access key, secret key, optional session token, and region
+- `get_aws_region()`: Returns configured AWS region with fallback to us-east-1
+- Validates all required credentials are present before proceeding
+
+### AWS Client Module (src/aws_client.py)
+
+Creates configured boto3 EC2 client with comprehensive error handling:
+
+- `create_ec2_client()`: Initializes boto3 EC2 client with credentials
+- Handles NoCredentialsError, BotoCoreError, and general exceptions
+- Provides clear error messages for troubleshooting
+
+### Instance CLI Module (src/instances_cli.py)
+
+Implements all EC2 instance operations with user-friendly interfaces:
+
+- `list_instances()`: Display all instances with detailed information
+- `filter_instances_by_state()`: Filter and display instances by state (running, stopped, etc.)
+- `create_instance()`: Create new EC2 instances with custom AMI, type, and key pair
+- `stop_instances()`: Stop running instances
+- `start_instances()`: Start stopped instances
+- `reboot_instances()`: Reboot running instances
+- `terminate_instances()`: Permanently delete instances
+
+All functions include input validation, error handling, and user feedback.
+
+### Main Application (src/main.py)
+
+Interactive menu-driven interface that orchestrates all operations:
+
+- Displays numbered menu options for all available operations
+- Handles user input with validation
+- Manages KeyboardInterrupt for graceful exit
+- Coordinates between CLI functions and AWS client
+
+## Installation and Setup
+
+### Prerequisites
+
+- Python 3.12 or higher
+- AWS account with EC2 access permissions
+- Valid AWS credentials (access key and secret key)
+
+### Step 1: Clone the Repository
+
+```bash
+git clone https://github.com/SvillarroelZ/reto-2-python-generation.git
+cd reto-2-python-generation
+```
+
+### Step 2: Create Virtual Environment
 
 ```bash
 python -m venv .venv
-# En Windows:
-.venv\Scripts\activate
-# En macOS / Linux:
-source .venv/bin/activate
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 ```
 
-2. Instalar dependencias:
+### Step 3: Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-El archivo requirements.txt incluye al menos:
+### Step 4: Configure AWS Credentials
 
-```txt
-boto3
-jmespath
-python-dotenv
-```
+For security reasons, AWS credentials are stored in a `.env` file that is never committed to version control.
 
----
-
-## 🔐 Paso 3 — Configurar tus credenciales de AWS
-
-Tienes 3 opciones. Elige solo UNA.
-
-### Opción A: aws configure (recomendada si tienes AWS CLI)
+Create a `.env` file in the project root (you can copy from `.env.example`):
 
 ```bash
-aws configure
+cp .env.example .env
 ```
 
-Te pedirá:
-
-- AWS Access Key ID  
-- AWS Secret Access Key  
-- Default region name (por ejemplo, us-east-1)  
-- Default output format (json)
-
-### Opción B: Variables de entorno (más avanzada)
+Then edit `.env` with your actual credentials:
 
 ```bash
-export AWS_ACCESS_KEY_ID="TU_ACCESS_KEY"
-export AWS_SECRET_ACCESS_KEY="TU_SECRET_KEY"
-export AWS_DEFAULT_REGION="us-east-1"
+AWS_ACCESS_KEY_ID=your_access_key_here
+AWS_SECRET_ACCESS_KEY=your_secret_key_here
+AWS_SESSION_TOKEN=your_session_token_here  # Optional, for temporary credentials
+AWS_DEFAULT_REGION=us-west-2
 ```
 
-### Opción C: Archivo .env (usando python-dotenv)
+The `.env` file is automatically loaded by python-dotenv and is listed in `.gitignore` to prevent accidental credential exposure.
 
-1. Crea un archivo llamado .env en la raíz del proyecto:
+Note: The application also supports standard environment variables if you prefer not to use a .env file.
 
-```env
-AWS_ACCESS_KEY_ID=TU_ACCESS_KEY
-AWS_SECRET_ACCESS_KEY=TU_SECRET_KEY
-AWS_DEFAULT_REGION=us-east-1
-```
+## Usage
 
-2. Nunca subas tu .env a GitHub.  
-   Asegúrate de que .gitignore contenga:
-
-```gitignore
-.env
-```
-
----
-
-## 🧱 Paso 4 — Estructura del proyecto
-
-La estructura recomendada del proyecto es:
-
-```txt
-NOMBRE_DEL_REPO/
-├─ src/
-│  ├─ config.py
-│  ├─ aws_client.py
-│  ├─ instances_cli.py
-│  └─ main.py
-├─ requirements.txt
-└─ README.md
-```
-
-### src/config.py
-Responsable de leer variables de entorno y exponer la configuración.
-
-```python
-# src/config.py
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
-
-AWS_REGION = os.getenv("AWS_DEFAULT_REGION", "us-east-1")
-
-def get_aws_credentials():
-    '''
-    Devuelve un diccionario con las credenciales de AWS.
-    Si las variables no existen, lanza una excepción clara para el usuario.
-    '''
-    access_key = os.getenv("AWS_ACCESS_KEY_ID")
-    secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
-
-    if not access_key or not secret_key:
-        raise ValueError("No se encontraron las credenciales de AWS. Revisa tu archivo .env o variables de entorno.")
-
-    return {
-        "aws_access_key_id": access_key,
-        "aws_secret_access_key": secret_key,
-        "region_name": AWS_REGION,
-    }
-```
-
-### src/aws_client.py
-Crea y devuelve el cliente de AWS (por ejemplo, EC2).
-
-```python
-# src/aws_client.py
-import boto3
-from botocore.exceptions import BotoCoreError, NoCredentialsError
-from .config import get_aws_credentials
-
-def create_ec2_client():
-    '''
-    Crea un cliente de EC2 usando las credenciales de config.py.
-    Maneja excepciones básicas para dar mensajes claros al usuario.
-    '''
-    try:
-        creds = get_aws_credentials()
-        client = boto3.client("ec2", **creds)
-        return client
-    except NoCredentialsError:
-        print("Error: No se encontraron credenciales de AWS.")
-        raise
-    except BotoCoreError as e:
-        print("Error al crear el cliente de EC2:", e)
-        raise
-```
-
-### src/instances_cli.py
-Aquí vivirán las funciones que interactúan con las instancias: listar, crear, detener, etc.
-
-```python
-# src/instances_cli.py
-from botocore.exceptions import ClientError
-import jmespath
-
-def list_instances(ec2_client):
-    '''
-    Lista las instancias existentes y muestra información básica:
-    - ID de instancia
-    - Estado
-    - Tipo
-    - Zona de disponibilidad
-    '''
-    try:
-        response = ec2_client.describe_instances()
-        # Usamos JMESPath para extraer solo lo que nos interesa
-        instances = jmespath.search(
-            "Reservations[].Instances[][].{id: InstanceId, state: State.Name, type: InstanceType, az: Placement.AvailabilityZone}",
-            response
-        )
-        print("Instancias encontradas:")
-        for inst in instances:
-            print(f"- {inst['id']} | {inst['state']} | {inst['type']} | {inst['az']}")
-    except ClientError as e:
-        print("Error al listar instancias:", e)
-
-def create_instance(ec2_client):
-    '''
-    Crea una instancia simple (por ejemplo, Amazon Linux 2 t2.micro).
-    Practicarás:
-    - Lectura de input()
-    - Validaciones básicas
-    - Manejo de excepciones
-    '''
-    print("Creación de instancia")
-    ami_id = input("Ingresa el AMI ID (ejemplo: ami-1234567890abcdef0): ").strip()
-    instance_type = input("Ingresa el tipo de instancia (ejemplo: t2.micro): ").strip()
-
-    if not ami_id or not instance_type:
-        print("AMI ID y tipo de instancia son obligatorios.")
-        return
-
-    try:
-        response = ec2_client.run_instances(
-            ImageId=ami_id,
-            InstanceType=instance_type,
-            MinCount=1,
-            MaxCount=1
-        )
-        instance_id = response["Instances"][0]["InstanceId"]
-        print(f"Instancia creada con ID: {instance_id}")
-    except ClientError as e:
-        print("Error al crear la instancia:", e)
-
-def stop_instance(ec2_client):
-    '''
-    Detiene una instancia existente a partir de su ID.
-    Practicarás:
-    - Validación de que el ID no esté vacío
-    - Manejo de errores de AWS
-    '''
-    instance_id = input("Ingresa el ID de la instancia a detener: ").strip()
-    if not instance_id:
-        print("El ID de la instancia no puede estar vacío.")
-        return
-
-    try:
-        ec2_client.stop_instances(InstanceIds=[instance_id])
-        print(f"Solcitada detención de la instancia {instance_id}")
-    except ClientError as e:
-        print("Error al detener la instancia:", e)
-
-# TODO: Implementar funciones similares:
-# - start_instance(ec2_client)
-# - reboot_instance(ec2_client)
-# - terminate_instance(ec2_client)
-# - filter_instances_by_state(ec2_client)
-```
-
-### src/main.py
-La puerta de entrada de la aplicación.  
-Mostrará un menú y llamará a las funciones de instances_cli.py.
-
-```python
-# src/main.py
-from .aws_client import create_ec2_client
-from .instances_cli import (
-    list_instances,
-    create_instance,
-    stop_instance,
-    # start_instance,
-    # reboot_instance,
-    # terminate_instance,
-    # filter_instances_by_state,
-)
-
-def print_menu():
-    print("\n=== Cloud Instance Manager ===")
-    print("1. Listar instancias")
-    print("2. Crear instancia")
-    print("3. Detener instancia")
-    print("4. Iniciar instancia (TODO)")
-    print("5. Reiniciar instancia (TODO)")
-    print("6. Terminar instancia (TODO)")
-    print("7. Filtrar instancias por estado (TODO)")
-    print("0. Salir")
-
-def main():
-    ec2_client = create_ec2_client()
-
-    while True:
-        print_menu()
-        opcion = input("Selecciona una opción: ").strip()
-
-        if opcion == "1":
-            list_instances(ec2_client)
-        elif opcion == "2":
-            create_instance(ec2_client)
-        elif opcion == "3":
-            stop_instance(ec2_client)
-        elif opcion == "0":
-            print("Saliendo del administrador de instancias. ¡Hasta luego!")
-            break
-        else:
-            print("Opción no válida. Intenta nuevamente.")
-
-if __name__ == "__main__":
-    main()
-```
-
----
-
-## 🧪 Ritmo de trabajo recomendado
-
-### Fase 1 — Configuración
-- Clonar repo  
-- Crear entorno virtual  
-- Instalar dependencias  
-- Configurar credenciales  
-- Probar que main.py al menos muestra el menú
-
-### Fase 2 — Lectura y comprensión
-- Entender config.py y aws_client.py  
-- Dibujar en papel el flujo: main → aws_client → EC2
-
-### Fase 3 — Implementación guiada
-- Completar funciones simples (listar, crear, detener)  
-- Agregar mensajes claros y validaciones
-
-### Fase 4 — Manejo de errores
-- Envolver llamadas críticas en try / except  
-- Diferenciar errores de credenciales, permisos, parámetros inválidos
-
-### Fase 5 — Filtros con JMESPath
-- Practicar expresiones JMESPath para:
-  - Mostrar solo instancias running
-  - Mostrar solo IDs y estados
-  - Filtrar por tipo de instancia
-
----
-
-## 📦 Entrega del proyecto (Pull Request)
-
-1. Asegúrate de que tu código corre sin errores:
+### Running the Application
 
 ```bash
-python -m src.main
+python src/main.py
 ```
 
-2. Guarda tus cambios:
+### Interactive Menu
+
+```
+======================================================================
+                    AWS EC2 Instance Manager
+======================================================================
+1. List all instances
+2. Filter instances by state
+3. Create instance
+4. Stop instances
+5. Start instances
+6. Reboot instances
+7. Terminate instances
+8. Exit
+======================================================================
+Select an option: 
+```
+
+### Example Operations
+
+#### List All Instances
+
+Select option 1 to view all EC2 instances with their ID, name, type, state, and IP addresses.
+
+#### Filter by State
+
+Select option 2 and enter a state (running, stopped, pending, stopping, terminated) to view instances matching that state.
+
+#### Create Instance
+
+Select option 3 and provide:
+- AMI ID (e.g., ami-0b8c6b923777519db for Amazon Linux 2023 in us-west-2)
+- Instance type (e.g., t2.micro, t3.micro)
+- Key pair name for SSH access
+- Instance name tag
+
+#### Lifecycle Operations
+
+Select options 4-7 to stop, start, reboot, or terminate instances by entering their instance IDs (comma-separated for multiple instances).
+
+## Testing
+
+### Test Framework
+
+The project uses pytest with comprehensive coverage:
+
+- **pytest**: Test framework for writing and running tests
+- **pytest-cov**: Coverage reporting tool
+- **pytest-mock**: Mocking AWS API calls for isolated unit tests
+
+### Test Structure
+
+```
+tests/
+├── test_config.py         # 8 tests for credential management
+├── test_aws_client.py     # 5 tests for client creation
+└── test_instances_cli.py  # 24 tests for CLI operations
+```
+
+### Running Tests
+
+Execute all tests:
 
 ```bash
-git status
-git add src/
-git commit -m "Implemento Cloud Instance Manager básico"
+pytest
 ```
 
-3. Envía tus cambios a tu fork:
+Run tests with coverage report:
 
 ```bash
-git push origin main
+pytest --cov=src --cov-report=term-missing
 ```
 
-4. En GitHub:
-   - Haz clic en Compare & Pull Request
-   - Título sugerido:
-     Entrega Proyecto 2 — Cloud Instance Manager
-   - Describe qué partes completaste (listar, crear, detener, etc.)
+Run specific test file:
 
-5. Crea el Pull Request hacia el repositorio del profesor.
+```bash
+pytest tests/test_config.py
+```
 
----
+### Coverage Results
 
-## 🎉 Logros esperados
+The test suite achieves 100% coverage on all business logic modules:
 
-Al finalizar este proyecto habrás practicado:
+```
+Name                     Stmts   Miss  Cover
+--------------------------------------------
+src/__init__.py              0      0   100%
+src/aws_client.py           15      0   100%
+src/config.py               14      0   100%
+src/instances_cli.py       110      0   100%
+--------------------------------------------
+TOTAL                      139      0   100%
+```
 
-- Uso de estructuras de datos reales con respuestas de AWS  
-- Diseño de una aplicación de línea de comandos  
-- Organización de código en módulos y funciones  
-- Manejo de errores y excepciones de AWS  
-- Uso de credenciales de forma responsable  
-- Filtros con JMESPath para extraer datos útiles  
-- Flujo de trabajo profesional con GitHub + Pull Requests
+Note: `src/main.py` is excluded from coverage reporting as it is an interactive entry point designed for manual execution, not programmatic testing.
 
-¡Este proyecto se parece mucho a lo que harías en un equipo de DevOps o Cloud Engineering junior!
+### Test Documentation
+
+For detailed information about test cases, mocking strategies, and best practices, see [tests/README.md](tests/README.md).
+
+## Security Considerations
+
+### Credential Management
+
+- **.env File**: AWS credentials are loaded from `.env` file using python-dotenv library
+- **Environment Variable Fallback**: Also supports system environment variables if .env file is not present
+- **Git Exclusion**: `.env` file is listed in `.gitignore` to prevent accidental commits
+- **Session Tokens**: Supports temporary credentials with AWS_SESSION_TOKEN for enhanced security
+- **Validation**: All credentials are validated before AWS API calls
+
+### Best Practices Applied
+
+- Never hardcode credentials in source code
+- Use least privilege IAM policies for AWS credentials
+- Rotate credentials regularly
+- Use temporary credentials when possible
+- Keep `.env` file permissions restricted (chmod 600)
+
+## Lessons Learned
+
+### Technical Mastery
+
+**AWS SDK Integration**: I gained deep understanding of boto3's EC2 client capabilities, including pagination, filtering with JMESPath queries, and handling various AWS service exceptions. The project reinforced the importance of proper error handling when working with cloud APIs.
+
+**Test-Driven Development**: Implementing comprehensive unit tests with mocking taught me how to isolate components and verify behavior without making actual AWS API calls. Achieving 100% coverage on business logic demonstrated the value of thorough testing for production-ready code.
+
+**Configuration Management**: I learned the critical importance of secure credential handling. Using .env files with python-dotenv for local development provides both security (via .gitignore) and flexibility, while still supporting standard environment variables for production deployments.
+
+### Overcoming Challenges
+
+**Import Resolution**: Initial ModuleNotFoundError issues were resolved by properly structuring the project with `__init__.py` files and using absolute imports. This reinforced the importance of Python package structure.
+
+**Redundancy Elimination**: During code review, I identified and removed the redundant `filter_instances_by_state()` function in main.py, consolidating logic into the instances_cli module. This experience highlighted the value of regular code reviews for maintaining clean codebases.
+
+**Coverage Configuration**: Understanding when to exclude code from coverage (interactive entry points like main.py) versus requiring 100% coverage for business logic was an important distinction that improved test quality.
+
+### Design Decisions
+
+**Separation of Concerns**: Splitting functionality into config, client, CLI operations, and main entry point created a modular architecture that is easy to test, maintain, and extend.
+
+**User Experience**: Implementing input validation with `_prompt_non_empty()` and providing clear error messages ensures users understand what went wrong and how to fix it.
+
+**Professional Standards**: Adopting conventions like English-only code, no emojis in production code, consistent formatting, and comprehensive docstrings demonstrates commitment to maintainable code.
+
+## Improvements
+
+To enhance the robustness and production-readiness of this CLI tool, the following improvements are recommended:
+
+### High Priority
+
+**Logging Implementation**: Replace print statements with Python's logging module for better observability and debugging in production environments. This allows filtering by severity (DEBUG, INFO, WARNING, ERROR) and directing logs to files or monitoring systems.
+
+**Specific Exception Handling**: Instead of catching broad `Exception` types, handle specific boto3 exceptions like `ClientError`, `ParamValidationError`, and check error codes. This enables more precise error messages and recovery strategies.
+
+**State Validation**: Add stricter validation in filter and lifecycle operations. For example, verify that users are not trying to start an already running instance or stop an already stopped instance, providing clear feedback before making API calls.
+
+### Medium Priority
+
+**Configuration File Support**: Extend beyond `.env` to support AWS credential profiles (`~/.aws/credentials`) and instance configuration files for common setups. This would allow users to switch between multiple AWS accounts easily.
+
+**Batch Operations with Confirmation**: For destructive operations (terminate), implement a two-step confirmation process and display instance details before proceeding. This prevents accidental data loss.
+
+**Output Formatting Options**: Add support for JSON and CSV output formats in addition to the current table format. This enables integration with other tools and automation scripts.
+
+### Advanced Features
+
+**Asynchronous Operations**: For listing large numbers of instances or performing bulk operations, implement async/await patterns with `aioboto3` to improve performance and responsiveness.
+
+**Instance Templates**: Allow users to save and reuse instance configurations (AMI, type, security groups, user data) as templates, reducing repetitive input for common deployment patterns.
+
+**Cost Estimation**: Integrate AWS Pricing API to provide estimated costs before creating instances, helping users make informed decisions about instance types and usage.
+
+**Infrastructure as Code Integration**: Export current instance configurations as Terraform or CloudFormation templates, enabling version-controlled infrastructure management and reproducible deployments.
+
+## Dependencies
+
+```
+boto3==1.35.93
+botocore==1.35.93
+jmespath==1.0.1
+python-dotenv==1.0.1
+pytest==9.0.1
+pytest-cov==7.0.0
+pytest-mock==3.15.1
+```
+
+## Contributing
+
+Contributions are welcome. Please ensure:
+
+1. All tests pass before submitting pull requests
+2. New features include corresponding unit tests
+3. Code follows existing style conventions (no emojis, English only, consistent formatting)
+4. Documentation is updated to reflect changes
+
+## License
+
+This project is provided as-is for educational and demonstration purposes.
+
+## Author
+
+Sebastian Villarroel Z.  
+GitHub: [@SvillarroelZ](https://github.com/SvillarroelZ)

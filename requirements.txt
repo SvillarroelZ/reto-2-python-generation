@@ -1,0 +1,7 @@
+boto3
+botocore
+jmespath
+python-dotenv
+pytest
+pytest-cov
+pytest-mock
