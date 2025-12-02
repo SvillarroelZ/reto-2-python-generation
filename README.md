@@ -16,9 +16,75 @@ This project validates skills in cloud automation, software engineering best pra
 
 ## Architecture Diagram
 
-For a detailed architecture diagram with data flow, security, and testing layers, see [Architecture Documentation](docs/architecture.md).
+```mermaid
+graph LR
+    subgraph "Local Environment"
+        User[("User<br/>Developer")]
+        ENV[(".env<br/>Credentials<br/>(gitignored)")]
+        
+        subgraph "Python CLI Application"
+            MAIN["main.py<br/>Interactive Menu"]
+            CLI["instances_cli.py<br/>EC2 Operations"]
+            CLIENT["aws_client.py<br/>Boto3 Client"]
+            CONFIG["config.py<br/>Credential Loader"]
+        end
+    end
+    
+    subgraph "AWS SDK"
+        BOTO3["Boto3 SDK<br/>Python AWS Library"]
+    end
+    
+    subgraph "AWS Cloud"
+        IAM["IAM<br/>Authentication"]
+        EC2SVC["EC2 Service"]
+        
+        subgraph "EC2 Instances"
+            INST1["Instance 1<br/>running"]
+            INST2["Instance 2<br/>stopped"]
+            INST3["Instance 3<br/>terminated"]
+        end
+    end
+    
+    subgraph "Testing Layer"
+        PYTEST["pytest<br/>Test Framework"]
+        TEST1["test_config.py"]
+        TEST2["test_aws_client.py"]
+        TEST3["test_instances_cli.py"]
+    end
+    
+    User -->|"Run CLI"| MAIN
+    MAIN -->|"Function Calls"| CLI
+    CLI -->|"Operations"| CLIENT
+    ENV -->|"Load Vars"| CONFIG
+    CONFIG -->|"Credentials"| CLIENT
+    CLIENT -->|"API Calls"| BOTO3
+    BOTO3 -->|"HTTPS/TLS"| IAM
+    IAM -->|"Authenticated"| EC2SVC
+    EC2SVC -->|"Manage"| INST1
+    EC2SVC -->|"Manage"| INST2
+    EC2SVC -->|"Manage"| INST3
+    
+    PYTEST -.->|"Mock & Test"| TEST1
+    PYTEST -.->|"Mock & Test"| TEST2
+    PYTEST -.->|"Mock & Test"| TEST3
+    TEST1 -.->|"Validates"| CONFIG
+    TEST2 -.->|"Validates"| CLIENT
+    TEST3 -.->|"Validates"| CLI
+    
+    classDef localStyle fill:#e1f5e1,stroke:#4caf50,stroke-width:2px
+    classDef awsStyle fill:#fff3e0,stroke:#ff9800,stroke-width:2px
+    classDef testStyle fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px
+    classDef sdkStyle fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
+    classDef securityStyle fill:#ffebee,stroke:#f44336,stroke-width:2px
+    
+    class MAIN,CLI,CLIENT,CONFIG localStyle
+    class IAM,EC2SVC,INST1,INST2,INST3 awsStyle
+    class PYTEST,TEST1,TEST2,TEST3 testStyle
+    class BOTO3 sdkStyle
+    class ENV securityStyle
+```
 
-![Architecture Overview](docs/architecture.md)
+For detailed technical documentation including data flow, operations table, and technology stack, see [Architecture Documentation](docs/architecture.md).
 
 ## Project Structure
 
