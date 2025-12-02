@@ -413,5 +413,6 @@ This project is provided as-is for educational and demonstration purposes.
 
 ## Author
 
-Sebastian Villarroel Z.  
+Sofia Villarroel Z.  
 GitHub: [@SvillarroelZ](https://github.com/SvillarroelZ)
+Linkedin (https://www.linkedin.com/in/svillarroelz/)
